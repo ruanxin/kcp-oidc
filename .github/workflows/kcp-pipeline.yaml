@@ -29,11 +29,12 @@ jobs:
       - name: Check Permissions in Kubernetes
         run: |
           echo "${{ secrets.API_SERVER_CA }}" | base64 -d > /tmp/ca.crt
-          kubectl \
+          alias koidc='kubectl \
           --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
           --server="$API_SERVER" \
-          --certificate-authority="/tmp/ca.crt" \
-          auth can-i --list --namespace kyma-system
+          --certificate-authority="/tmp/ca.crt"'
+          echo "PATH=koidc" >> $GITHUB_OUTPUT
+          koidc auth can-i --list --namespace kyma-system
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
@@ -50,23 +51,15 @@ jobs:
           ln -s /usr/local/bin/kyma-unstable /usr/local/bin/kyma
       - name: Deploy ingress
         run: |
-          kubectl \
-          --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
-          --server="$API_SERVER" \
-          --certificate-authority="/tmp/ca.crt" \
-          apply -f repo/ingress.yaml
+          koidc apply -f repo/ingress.yaml
       - name: Create Template Operator Module and push to OCI registry
         working-directory: template-operator
         run: |
-          OCI_USERNAME=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
-          OCI_PASSWORD=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.password}" | base64 -d)
+          OCI_USERNAME=$(koidc get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
+          OCI_PASSWORD=$(koidc get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.password}" | base64 -d)
           make build-manifests
           kyma alpha create module --module-config-file ./module-config.yaml --path . --registry $REGISTRY_URL -c ${OCI_USERNAME}:${OCI_PASSWORD}
           kubectl apply -f template.yaml
       - name: Delete ingress
         run: |
-          kubectl \
-          --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
-          --server="$API_SERVER" \
-          --certificate-authority="/tmp/ca.crt" \
-          delete -f repo/ingress.yaml
+          koidc delete -f repo/ingress.yaml
