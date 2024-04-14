@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       API_SERVER: https://api.kcp-oidc.jellyfish.shoot.canary.k8s-hana.ondemand.com
-      CLUSTER_KUBECONFIG_PATH: /tmp/cluster_kubeconfig.yaml
     steps:
       - name: configure OIDC
         id: create-oidc-token
@@ -28,8 +27,9 @@ jobs:
           echo $IDTOKEN | jq -R 'split(".") | .[1] | @base64d | fromjson'
       - name: Check Permissions in Kubernetes
         run: |
+          echo "${{ secrets.API_SERVER_CA }}" | base64 -d > /tmp/ca.crt
           kubectl \
           --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
           --server="$API_SERVER" \
-          --certificate-authority="${{ secrets.API_SERVER_CA }}" \
+          --certificate-authority="/tmp/ca.crt" \
           auth can-i --list --namespace kyma-system      
