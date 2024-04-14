@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-router
+  namespace: kyma-system
+  annotations:
+    cert.gardener.cloud/purpose: managed
+spec:
+  tls:
+    - hosts:
+        - "kcp-oidc.jellyfish.shoot.canary.k8s-hana.ondemand.com"
+        - "*.ingress.kcp-oidc.jellyfish.shoot.canary.k8s-hana.ondemand.com"
+      secretName: secret-tls
+  rules:
+    - host: 'registry.ingress.kcp-oidc.jellyfish.shoot.canary.k8s-hana.ondemand.com'
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: serverless-docker-registry
+                port:
+                  number: 5000

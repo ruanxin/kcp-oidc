@@ -1,0 +1,25 @@
+name: setup-ocm-registry-on-kcp
+
+permissions:
+  id-token: write
+on:
+  workflow_dispatch:
+jobs:
+  setup-cluster:
+    runs-on: ubuntu-latest
+    env:
+      # gardener service account is used to provision and configure cluister
+      GARDENER_SA_CONTENT: ${{ secrets.GARDENER_SA_CONTENT }}
+      # path where value of GARDENER_SA_CONTENT will be located
+      GARDENER_SA_PATH: /tmp/gardener_sa.yaml
+      # path to the kubeconfig used to connect with the cluster
+      CLUSTER_KUBECONFIG_PATH: /tmp/cluster_kubeconfig.yaml
+    steps:
+      - name: save kubeconfig
+        # save GARDENER_SA_CONTENT to the right file to use it later as kubeconfig for kubectl 
+        run: 'echo "$GARDENER_SA_CONTENT" > $GARDENER_SA_PATH'
+      - name: wait for available API
+        if: true
+        # wait until gardener will create ca secret and setup api
+        run: |
+          kubectl wait --kubeconfig $GARDENER_SA_PATH --for=condition=SystemComponentsHealthy --timeout=30m shoot/kcp-oidc
