@@ -53,7 +53,7 @@ jobs:
           OCI_USERNAME=$(kubectl --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} --server="$API_SERVER" --certificate-authority="/tmp/ca.crt" get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
           OCI_PASSWORD=$(kubectl --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} --server="$API_SERVER" --certificate-authority="/tmp/ca.crt" get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.password}" | base64 -d)
           make build-manifests
-          yq -i '.version |= (split(".") | .[-1] |= ((. tag = "!!int") + 1) | join("."))' ./module-config.yaml
+          date=0.1.2-$(date '+%Y%m%d%M%S') yq -i '.version=env(date)' ./module-config.yaml
           less ./module-config.yaml
           kyma alpha create module --module-config-file ./module-config.yaml --path . --registry $REGISTRY_URL -c ${OCI_USERNAME}:${OCI_PASSWORD}
       - name: Delete ingress
