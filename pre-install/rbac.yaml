@@ -4,15 +4,9 @@ metadata:
   namespace: kyma-system
   name: github-oidc-role
 rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "watch", "list"]
   - apiGroups: [ "" ]
     resources: [ "secrets" ]
     verbs: [ "get", "watch", "list" ]
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "watch", "list", "create", "update", "delete"]
   - apiGroups: [ "networking.k8s.io" ]
     resources: [ "ingresses" ]
     verbs: [ "get", "watch", "list", "create", "update", "delete" ]
