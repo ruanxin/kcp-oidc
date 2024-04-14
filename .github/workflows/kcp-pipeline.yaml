@@ -32,4 +32,15 @@ jobs:
           --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
           --server="$API_SERVER" \
           --certificate-authority="/tmp/ca.crt" \
-          auth can-i --list --namespace kyma-system      
+          auth can-i --list --namespace kyma-system
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          path: repo
+      - name: Deploy ingress
+        run: |
+          kubectl \
+          --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
+          --server="$API_SERVER" \
+          --certificate-authority="/tmp/ca.crt" \
+          apply -f repo/ingress.yaml    
