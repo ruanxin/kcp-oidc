@@ -59,9 +59,9 @@ jobs:
         working-directory: template-operator
         run: |
           OCI_USERNAME=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
-          OCI_PASSWORD=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
+          OCI_PASSWORD=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.password}" | base64 -d)
           make build-manifests
-          kyma alpha create module --module-config-file ./module-config.yaml --path . --registry $REGISTRY_URL -c $OCI_USERNAME:$OCI_PASSWORD
+          kyma alpha create module --module-config-file ./module-config.yaml --path . --registry $REGISTRY_URL -c ${OCI_USERNAME}:${OCI_PASSWORD}
           kubectl apply -f template.yaml
       - name: Delete ingress
         run: |
