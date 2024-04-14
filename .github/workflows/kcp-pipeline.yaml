@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       API_SERVER: https://api.kcp-oidc.jellyfish.shoot.canary.k8s-hana.ondemand.com
+      REGISTRY_URL: https://registry.ingress.kcp-oidc.jellyfish.shoot.canary.k8s-hana.ondemand.com
     steps:
       - name: configure OIDC
         id: create-oidc-token
@@ -37,10 +38,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: repo
+      - name: Checkout Template Operator
+        uses: actions/checkout@v4
+        with:
+          repository: kyma-project/template-operator
+          path: template-operator
+      - name: Install Kyma CLI
+        run: |
+          wget https://storage.googleapis.com/kyma-cli-unstable/kyma-linux
+          chmod +x kyma-linux && mv kyma-linux /usr/local/bin/kyma-unstable
+          ln -s /usr/local/bin/kyma-unstable /usr/local/bin/kyma
       - name: Deploy ingress
         run: |
           kubectl \
           --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
           --server="$API_SERVER" \
           --certificate-authority="/tmp/ca.crt" \
-          apply -f repo/ingress.yaml    
+          apply -f repo/ingress.yaml
+      - name: Create Template Operator Module and apply
+        working-directory: template-operator
+        run: |
+          OCI_USERNAME=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
+          OCI_PASSWORD=$(kubectl get secret -n kyma-system serverless-registry-config-default -o jsonpath="{.data.username}" | base64 -d)
+          make build-manifests
+          kyma alpha create module --module-config-file ./module-config.yaml --path . --registry $REGISTRY_URL:5000 -c $OCI_USERNAME:$OCI_PASSWORD
+          kubectl apply -f template.yaml
+      - name: Delete ingress
+        run: |
+          kubectl \
+          --token=${{ steps.create-oidc-token.outputs.IDTOKEN }} \
+          --server="$API_SERVER" \
+          --certificate-authority="/tmp/ca.crt" \
+          delete -f repo/ingress.yaml

@@ -1,22 +1,30 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  namespace: kyma-system
   name: github-oidc-role
 rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "watch", "list"]
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    verbs: [ "get", "watch", "list" ]
   - apiGroups: ["apps"]
     resources: ["deployments"]
     verbs: ["get", "watch", "list", "create", "update", "delete"]
   - apiGroups: [ "networking.k8s.io" ]
-    resources: [ "ingress" ]
+    resources: [ "ingresses" ]
+    verbs: [ "get", "watch", "list", "create", "update", "delete" ]
+  - apiGroups: [ "operator.kyma-project.io" ]
+    resources: [ "moduletemplates" ]
     verbs: [ "get", "watch", "list", "create", "update", "delete" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: github-oidc-binding
+  namespace: kyma-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
