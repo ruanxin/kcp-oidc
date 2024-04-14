@@ -1,0 +1,13 @@
+apiVersion: authentication.gardener.cloud/v1alpha1
+kind: OpenIDConnect
+metadata:
+  name: github-oidc
+spec:
+  clientID: gh-kubernetes-action
+  issuerURL: https://token.actions.githubusercontent.com
+  usernameClaim: sub
+  usernamePrefix: "actions-oidc:"
+  requiredClaims:
+    repository: ruanxin/kcp-oidc
+    workflow: push-ocm-image-to-kcp-registry
+    ref: refs/heads/main
